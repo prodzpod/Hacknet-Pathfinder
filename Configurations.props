@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="16.0">
+<Project ToolsVersion="16.0">
 
   <PropertyGroup Label="GetSteamLibraryDir" Condition=" '$(SteamLibraryDir)' == '' ">
     <SteamLibraryDir Condition=" $([MSBuild]::IsOSPlatform('Windows'))">
@@ -36,6 +36,7 @@
     <LibsDir>$(PathfinderSolutionDir)libs/</LibsDir>
     <PatcherDir>$(PathfinderSolutionDir)PathfinderPatcher/</PatcherDir>
     <PatcherBinDir>$(PatcherDir)bin/$(Configuration)/$(TargetFramework)/</PatcherBinDir>
+    <BepInExTestDir>$(PathfinderSolutionDir).BepInEx/</BepInExTestDir>
     <AssemblySearchPaths>
     $(AssemblySearchPaths);
     $(LibsDir);
