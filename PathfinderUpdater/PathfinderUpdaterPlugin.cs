@@ -35,8 +35,6 @@ namespace PathfinderUpdater
 
         new internal static ConfigFile Config;
 
-        internal static ConfigEntry<bool> IsEnabled;
-        internal static ConfigEntry<bool> EnablePreReleases;
         internal static ConfigEntry<string> AcceptedUpdate;
         internal static ConfigEntry<string> CurrentVersion;
 
@@ -46,8 +44,6 @@ namespace PathfinderUpdater
         {
             Config = base.Config;
             
-            IsEnabled = Config.Bind<bool>("AutoUpdater", "EnableAutoUpdates", true, "Enables or disables automatic updates for PathfinderAPI");
-            EnablePreReleases = Config.Bind<bool>("AutoUpdater", "UsePreReleases", false, "Whether or not to automatically update to beta versions");
             AcceptedUpdate = Config.Bind<string>("AutoUpdater", "LatestAcceptedUpdate", "", "Used internally to keep track of whether you accepted the update or not");
             CurrentVersion = Config.Bind<string>("AutoUpdater", "CurrentVersion", HacknetChainloader.VERSION,
                 "Used internally to keep track of version.\nIf you want to skip updating to a version but keep the updater on, set this manually to the latest verison.");
@@ -61,7 +57,7 @@ namespace PathfinderUpdater
                     prefix: new HarmonyMethod(AccessTools.Method(typeof(PathfinderUpdaterPlugin), nameof(FixConfig))));
             }
 
-            if (!IsEnabled.Value)
+            if (!PFWrapper.IsEnabledBox.Value)
                 return true;
 
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
@@ -88,7 +84,7 @@ namespace PathfinderUpdater
             foreach (var possibleRelease in releases)
             {
                 var possibleTag = Version.Parse(possibleRelease.Value<string>("tag_name").Substring(1));
-                if (possibleTag.PreRelease != null && !EnablePreReleases.Value)
+                if (possibleTag.PreRelease != null && !PFWrapper.IncludePrerelease.Value)
                     continue;
 
                 tag = possibleTag;
@@ -139,8 +135,18 @@ namespace PathfinderUpdater
 
     internal static class PFWrapper
     {
-        private static OptionCheckbox IsEnabledBox = new OptionCheckbox("Enabled", "Enables the auto updater", PathfinderUpdaterPlugin.IsEnabled.Value);
-        private static OptionCheckbox IncludePrerelease = new OptionCheckbox("IncludePreReleases", "Autoupdate to pre-releases", PathfinderUpdaterPlugin.EnablePreReleases.Value);
+        internal static PluginCheckbox IsEnabledBox = new PluginCheckbox(
+            "Enabled",
+            "Enables the auto updater",
+            true,
+            "Whether or not to automatically update to beta versions"
+        );
+        internal static PluginCheckbox IncludePrerelease = new PluginCheckbox(
+            "IncludePreReleases",
+            "Autoupdate to pre-releases",
+            false,
+            "Whether or not to automatically update to beta versions"
+        );
         private static PFButton AcceptVersion = new PFButton(760, 330, 120, 30, "Yes", new Color(102,255,127));
         private static PFButton DenyVersion = new PFButton(900, 330, 120, 30, "No", new Color(255,92,87));
         private static PFButton SkipVersion = new PFButton(1040, 330, 120, 30, "Skip", new Color(255, 255, 87));
@@ -148,16 +154,10 @@ namespace PathfinderUpdater
         [MethodImpl(MethodImplOptions.NoInlining)]
         internal static void PFAPILoaded()
         {
-            OptionsManager.AddOption("Updater", IsEnabledBox);
-            OptionsManager.AddOption("Updater", IncludePrerelease);
-            EventManager<CustomOptionsSaveEvent>.AddHandler(OptionsSaved);
+            OptionsManager.GetOrRegisterTab("Updater", "AutoUpdater")
+            .AddOption(IsEnabledBox)
+            .AddOption(IncludePrerelease);
             EventManager<DrawMainMenuEvent>.AddHandler(OnDrawMainMenu);
-        }
-
-        internal static void OptionsSaved(CustomOptionsSaveEvent args)
-        {
-            PathfinderUpdaterPlugin.IsEnabled.Value = IsEnabledBox.Value;
-            PathfinderUpdaterPlugin.EnablePreReleases.Value = IncludePrerelease.Value;
         }
 
         internal static void OnDrawMainMenu(MainMenuEvent args)

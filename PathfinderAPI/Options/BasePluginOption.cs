@@ -29,6 +29,7 @@ namespace Pathfinder.Options
         public virtual ValueT DefaultValue { get; set; } = default;
         public virtual string HeaderText { get; protected set; }
         public virtual string DescriptionText { get; protected set; }
+        public virtual string ConfigDescription { get; protected set; }
         public virtual string Id { get; private set; }
 
         public bool TrySetHeaderText(string text)
@@ -43,6 +44,12 @@ namespace Pathfinder.Options
             return DescriptionText == text;
         }
 
+        public bool TrySetConfigDescription(string desc)
+        {
+            ConfigDescription = desc;
+            return ConfigDescription == desc;
+        }
+
         public virtual void OnRegistered()
         {
             HacknetGuiId = PFButton.GetNextID();
@@ -52,7 +59,7 @@ namespace Pathfinder.Options
         public abstract void OnDraw(GameTime gameTime);
         public virtual void OnSave(ConfigFile config)
         {
-            config.Bind<ValueT>(Tab.Id, Id, DefaultValue);
+            config.Bind<ValueT>(Tab.Id, Id, DefaultValue, ConfigDescription);
         }
         public virtual void OnLoad(ConfigFile config)
         {
