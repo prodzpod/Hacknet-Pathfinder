@@ -4,6 +4,9 @@ using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Hacknet;
 using HarmonyLib;
+using Pathfinder.Event;
+using Pathfinder.Event.Options;
+using Pathfinder.Options;
 using Pathfinder.Util;
 
 namespace Pathfinder
@@ -33,6 +36,16 @@ namespace Pathfinder
             HarmonyInstance.PatchAll(typeof(PathfinderAPIPlugin).Assembly);
 
             return true;
+        }
+
+        public override void PostLoad()
+        {
+            OptionsManager.OnConfigLoad(Config);
+            EventManager<CustomOptionsSaveEvent>.AddHandler(_ =>
+            {
+                OptionsManager.OnConfigSave(Config);
+                Config.Save();
+            });
         }
     }
 }
