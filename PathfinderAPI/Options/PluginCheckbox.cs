@@ -2,24 +2,23 @@
 using Hacknet.Gui;
 using Microsoft.Xna.Framework;
 
-namespace Pathfinder.Options
+namespace Pathfinder.Options;
+
+public class PluginCheckbox : BasePluginOption<bool>
 {
-    public class PluginCheckbox : BasePluginOption<bool>
+    public PluginCheckbox(string headerText, string descriptionText = null, bool defaultValue = false, string configDesc = null)
     {
-        public PluginCheckbox(string headerText, string descriptionText = null, bool defaultValue = false, string configDesc = null)
-        {
-            HeaderText = headerText;
-            DescriptionText = descriptionText;
-            DefaultValue = defaultValue;
-            ConfigDescription = configDesc;
-        }
+        HeaderText = headerText;
+        DescriptionText = descriptionText;
+        DefaultValue = defaultValue;
+        ConfigDescription = configDesc;
+    }
 
-        public override void OnDraw(GameTime gameTime)
-        {
-            TextItem.doLabel(DrawDataField, HeaderText, null, 200);
-            Value = CheckBox.doCheckBox(HacknetGuiId, DrawDataField.X, DrawDataField.Y + 34, Value, null);
+    public override void OnDraw(GameTime gameTime)
+    {
+        TextItem.doLabel(DrawDataField, HeaderText, null, 200);
+        Value = CheckBox.doCheckBox(HacknetGuiId, DrawDataField.X, DrawDataField.Y + 34, Value, null);
 
-            TextItem.doSmallLabel(DrawDataField.Add(32, 30), DescriptionText, null);
-        }
+        TextItem.doSmallLabel(DrawDataField.Add(32, 30), DescriptionText, null);
     }
 }
