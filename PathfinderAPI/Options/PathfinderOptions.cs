@@ -16,7 +16,7 @@ internal static class PathfinderOptions
     [Util.Initialize]
     static void Initialize()
     {
-        OptionsManager.RegisterTab(OPTION_TAG)
+        OptionsManager.GetOrRegisterTab(OPTION_TAG)
         .AddOption(PreloadAllThemes)
         .AddOption(DisableSteamCloudError);
     }
