@@ -149,5 +149,45 @@ namespace Pathfinder.Executable
                     exe.Completed();
             });
         }
+
+        [HarmonyILManipulator]
+        [HarmonyPatch(typeof(Programs), nameof(Programs.execute), typeof(string[]), typeof(OS))]
+        private static void onExeCommandRun(ILContext il)
+        {
+            var c = new ILCursor(il);
+            c.GotoNext(MoveType.After,
+                x => x.MatchLdarg(1),
+                x => x.MatchLdfld(AccessTools.Field(typeof(OS), nameof(OS.thisComputer))),
+                x => x.MatchLdfld(AccessTools.Field(typeof(Computer), nameof(Computer.files))),
+                x => x.MatchLdfld(AccessTools.Field(typeof(FileSystem), nameof(FileSystem.root)))
+            );
+            c.RemoveRange(3); // removed .files[2]
+            c.Emit(OpCodes.Ldstr, "bin"); // replace with .searchForFolder("bin") for mkdir mods
+            c.Emit(OpCodes.Callvirt, AccessTools.Method(typeof(Folder), nameof(Folder.searchForFolder), new[] { typeof(string) }));
+
+            c.GotoNext(MoveType.Before,
+                x => x.MatchLdcI4(0),
+                x => x.MatchStloc(2)
+            );
+            int start = c.Index;
+            c.GotoNext(MoveType.Before,
+                x => x.MatchLdarg(1),
+                x => x.MatchLdstr(" ")
+            );
+            int end = c.Index;
+            c.Goto(start);
+            c.RemoveRange(end - start); // remove the whole loop
+            c.Emit(OpCodes.Ldarg_1);
+            c.Emit(OpCodes.Ldloc_1); // printCommands(os, folder)
+            c.EmitDelegate<Action<OS, Folder>>((os, folder) =>
+            {
+                foreach (FileEntry file in folder.files)
+                {
+                    if (PortExploits.crackExeData.Values.Contains(file.data)) os.write(file.name.Replace(".exe", ""));
+                    else if (PortExploits.crackExeDataLocalRNG.Values.Contains(file.data)) os.write(file.name.Replace(".exe", ""));
+                    else foreach (CustomExeInfo info in CustomExes) if (info.ExeData.Equals(file.data)) os.write(file.name.Replace(".exe", ""));
+                }
+            });
+        }
     }
 }
